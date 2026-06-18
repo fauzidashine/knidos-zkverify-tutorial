@@ -1,5 +1,7 @@
 # 🎯 Knidos zkVerify Challenge — Tutorial
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=fauzidashine/knidos-zkverify-tutorial)
+
 Tutorial step-by-step buat selesaikan Knidos **"Verify a ZK Proof Manually"** challenge di testnet dengan score **5/5 perfect + 250 points + ZK Verifier badge**.
 
 🔗 Challenge: https://testnet.knidos.xyz/zkverify-task
@@ -102,21 +104,25 @@ ssh -L 7878:localhost:7878 ubuntu@<public-ip>
 
 Lalu buka `http://localhost:7878` di browser PC lo.
 
-### 4. **GitHub Codespaces** (ga install apa-apa)
+### 4. **GitHub Codespaces** (ga install apa-apa) ⭐ **PALING GAMPANG**
 
-Paling cepet kalo cuma mau coba-coba:
+Paling cepet kalo cuma mau coba-coba — **langsung jalan dari browser HP/laptop manapun**:
 
-1. Buka repo ini di GitHub
-2. Klik tombol hijau **"Code"** → tab **Codespaces** → **Create codespace on main**
-3. Tunggu ~30 detik, dapet VS Code di browser + Ubuntu container + Docker pre-installed
-4. Di terminal Codespace, jalanin:
+1. Klik badge **"Open in GitHub Codespaces"** di atas README ini, **ATAU** buka repo → tombol hijau **"Code"** → tab **"Codespaces"** → **"Create codespace on main"**
+2. Tunggu ~60 detik, dapet **VS Code di browser + Ubuntu container + Docker pre-installed** (auto-install via `.devcontainer/devcontainer.json`)
+3. Di terminal Codespace, jalanin:
    ```bash
    docker run --pull=always -it -p 7878:7878 ghcr.io/node101-io/knidos-challenge:latest
    ```
-5. Klik tab **"Ports"** di VS Code, set port 7878 visibility ke **Public**
-6. Buka URL yang muncul (format `https://xxx-7878.app.github.dev`) di browser
+4. Codespace otomatis **deteksi port 7878** dan kasih notifikasi "Open in Browser" — klik
+5. Atau buka tab **"Ports"** di VS Code → klik ikon globe di sebelah port 7878 (visibility auto set ke public via devcontainer config)
+6. URL format: `https://xxx-7878.app.github.dev`
 
 **Free tier:** 60 jam/bulan untuk akun personal. Cukup buat kerjain banyak wallet.
+
+**Auto-forward:** Port 7878 udah ke-config di `.devcontainer/devcontainer.json` jadi langsung auto-forward tanpa setting manual.
+
+**Stop codespace** kalo udah selesai biar ga ke-bill: klik `Ctrl+Shift+P` → "Codespaces: Stop Current Codespace"
 
 ### 5. **Android (Termux + QEMU)** (advanced)
 
@@ -333,6 +339,8 @@ Lo bisa pake banyak wallet — tiap wallet = +250 pts. Tiap wallet:
 ├── scripts/
 │   ├── start-challenge.sh       # Bash one-liner buat start container
 │   └── verify-console.js        # Browser console helper buat verify
+├── .devcontainer/
+│   └── devcontainer.json        # Auto-config Codespaces (Docker + port 7878)
 └── .github/
     └── ISSUE_TEMPLATE/
         └── new-pattern.md       # Template buat report pola baru

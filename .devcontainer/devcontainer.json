@@ -1,0 +1,28 @@
+{
+  "name": "Knidos zkVerify Challenge",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "docker-dashboards": false
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false
+    }
+  },
+  "postCreateCommand": "echo '✅ Docker ready. Run: docker run --pull=always -it -p 7878:7878 ghcr.io/node101-io/knidos-challenge:latest'",
+  "portsAttributes": {
+    "7878": {
+      "label": "Knidos Challenge",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode-remote.remote-containers"
+      ]
+    }
+  }
+}
