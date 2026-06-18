@@ -20,11 +20,118 @@ Tutorial step-by-step buat selesaikan Knidos **"Verify a ZK Proof Manually"** ch
 
 ## 🛠 Yang Dibutuhin
 
-1. **PC / laptop** (Windows / macOS / Linux)
-2. **Docker Desktop** — https://docs.docker.com/get-docker/
+1. **Device apapun** yang bisa install Docker (PC / laptop / cloud VM / Chromebook via Linux)
+2. **Docker** (Desktop atau Engine — lihat [Alternatif Docker](#-alternatif-docker) di bawah kalo bukan Windows/Mac)
 3. **Browser** (Chrome / Firefox)
 4. **Crypto wallet** (MetaMask / Rabby) — udah ada signature
 5. **±10 menit** waktu per wallet
+
+---
+
+## 💻 Alternatif Docker
+
+Ga punya Windows/Mac Desktop? Tenang, banyak opsi:
+
+### 1. **Linux Native** (paling simple buat Linux user)
+
+Install Docker Engine langsung — ga perlu Desktop:
+
+```bash
+# Ubuntu/Debian
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+# Logout & login lagi, atau:
+newgrp docker
+
+# Verify
+docker --version
+```
+
+**Cocok untuk:** Ubuntu, Debian, Fedora, Arch, Mint, dll.
+
+### 2. **WSL2** (Windows 10/11 tanpa Hyper-V)
+
+1. Enable WSL: `wsl --install` (di PowerShell admin)
+2. Install Ubuntu dari Microsoft Store
+3. Di dalam Ubuntu, install Docker Engine (sama kayak Linux native di atas)
+4. **WAJIB** enable Docker Desktop WSL2 integration, ATAU jalankan Docker di WSL2 langsung tanpa Desktop
+
+```powershell
+# PowerShell (admin)
+wsl --install
+wsl --set-default-version 2
+```
+
+Lalu di dalam WSL2 Ubuntu:
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+```
+
+**Cocok untuk:** Windows Home edition (ga punya Hyper-V), atau user yang lebih suka Linux env.
+
+### 3. **Cloud VM Gratis** (ga punya PC sama sekali)
+
+Spin up Linux VM di cloud — Docker pre-installed atau tinggal install:
+
+| Provider | Free Tier | Setup |
+|---|---|---|
+| **Oracle Cloud** | 2 VM永久免费 (ARM, 4 CPU / 24GB RAM) | Sign up, bikin VM, SSH, install Docker |
+| **Google Cloud** | $300 credit / 90 hari | `gcloud compute ssh`, install Docker |
+| **AWS** | t2.micro / 12 bulan | `ssh -i key.pem ubuntu@vm`, install Docker |
+| **Hetzner** | Cloud VM murah (~€4/mo) | Paling cepet, ga perlu credit card banyak |
+
+**Paling recommended: Oracle Cloud** — kalo qualify, dapet 2 VM永久免费 yang bisa dipake selamanya.
+
+Quick setup (Oracle Cloud):
+```bash
+# SSH ke VM
+ssh ubuntu@<public-ip>
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker ubuntu
+
+# SSH tunnel supaya localhost:7878 ke-expose ke PC lo
+# (Karena browser lo di PC, VM di cloud)
+ssh -L 7878:localhost:7878 ubuntu@<public-ip>
+```
+
+Lalu buka `http://localhost:7878` di browser PC lo.
+
+### 4. **GitHub Codespaces** (ga install apa-apa)
+
+Paling cepet kalo cuma mau coba-coba:
+
+1. Buka repo ini di GitHub
+2. Klik tombol hijau **"Code"** → tab **Codespaces** → **Create codespace on main**
+3. Tunggu ~30 detik, dapet VS Code di browser + Ubuntu container + Docker pre-installed
+4. Di terminal Codespace, jalanin:
+   ```bash
+   docker run --pull=always -it -p 7878:7878 ghcr.io/node101-io/knidos-challenge:latest
+   ```
+5. Klik tab **"Ports"** di VS Code, set port 7878 visibility ke **Public**
+6. Buka URL yang muncul (format `https://xxx-7878.app.github.dev`) di browser
+
+**Free tier:** 60 jam/bulan untuk akun personal. Cukup buat kerjain banyak wallet.
+
+### 5. **Android (Termux + QEMU)** (advanced)
+
+Bisa, tapi ribet:
+1. Install Termux dari F-Droid
+2. Install proot-distro: `pkg install proot-distro && proot-distro install ubuntu`
+3. Masuk Ubuntu: `proot-distro login ubuntu`
+4. Install Docker (limited — perlu qemu-user untuk emulate)
+5. Forward port via SSH tunnel ke HP lain atau pakai `termux-wake-lock`
+
+**Tidak direkomendasikan** — lebih banyak masalah daripada solusi.
+
+### 6. **iOS** (sangat terbatas)
+
+iOS ga support Docker natively. Harus pakai opsi cloud VM (nomor 3) atau GitHub Codespaces (nomor 4).
 
 ---
 
