@@ -245,6 +245,70 @@ Ulangi untuk 5 records. Habis submit ke-5:
 
 ---
 
+## 🤖 Auto-Verify Mode (Codespace Edition)
+
+Males klik Valid/Invalid 5 kali? Pake auto-verify:
+
+```bash
+python3 scripts/auto-verify.py
+```
+
+Script ini ngegantiin semua step manual:
+1. Spawn Docker container otomatis
+2. Wait circuit compile + VK derivation
+3. Prompt: "sign wallet di browser, tekan Enter"
+4. Loop 5 records:
+   - Parse data record dari terminal output
+   - Verify via Subscan API (5 checks: VK, time, timestamps, fillsCommitment)
+   - Auto-select Valid/Invalid di TUI prompt
+5. Show final score + per-record verdict
+
+**Total interaction:** Sign wallet di browser + 1 Enter. Sisanya auto.
+
+### Output Contoh
+
+```
+─── Record 1/5 ───
+  fill_0:       0x000000000000…a7cc26
+  fill_1:       0x000000000000…554a1f
+  startTime:    1779685200000
+  endTime:      1779685560000
+  settlement:   0x4b5144a4…d28c6cb6c
+
+  ▶ Verifying via Subscan API...
+  ✓ VERDICT: VALID — all 5 checks pass
+  → Sent: Valid
+
+─── Record 2/5 ───
+  ...
+  ✗ VERDICT: INVALID — time backwards (1779685560000 >= 1779685200000)
+  → Sent: Invalid
+
+══════════════════════════════════════════════
+  📊  Final Results
+══════════════════════════════════════════════
+  Valid:   2/5
+  Invalid: 3/5
+  Score:   100 pts
+```
+
+### Kapan Pakai Yang Mana
+
+| Mode | Use case |
+|---|---|
+| **Manual** (Step 1-5 di atas) | First time, mau belajar pattern-nya |
+| **verify-console.js** | Anti-fatal error Subscan, semi-auto per record |
+| **auto-verify.py** | Push ke wallet kedua/ketiga, udah ngerti polanya |
+
+### Catatan Penting
+
+- **Subscan rate-limit (HTTP 403)**: Script auto-retry dengan exponential backoff (45s, 90s, 135s). Kalo kena, jangan panik.
+- **Manual fallback**: Kalo parsing gagal atau API error, script prompt manual input verdict.
+- **Dependencies**: `pexpect` + `requests`. Auto-install di first run. Atau pre-install: `pip3 install -r requirements.txt`
+- **Works di Codespace**: devcontainer udah pre-install Python 3.11 + run `pip install` di post-create.
+
+---
+
 ## 🚨 Jebakan Paling Sering
 
 ### 1. Time Backwards (paling sering!)
@@ -323,11 +387,13 @@ Transaksi yang bisa VALID atau INVALID tergantung session:
 .
 ├── README.md                    # Tutorial utama (file ini)
 ├── LICENSE                      # MIT License
+├── requirements.txt             # Python deps buat auto-verify
 ├── scripts/
 │   ├── start-challenge.sh       # Bash one-liner buat start container
-│   └── verify-console.js        # Browser console helper buat verify
+│   ├── verify-console.js        # Browser console helper (semi-auto per record)
+│   └── auto-verify.py           # Full-auto: spawn Docker + verify + select
 ├── .devcontainer/
-│   └── devcontainer.json        # Auto-config Codespaces (Docker + port 7878)
+│   └── devcontainer.json        # Auto-config Codespaces (Docker + Python 3.11)
 └── .github/
     └── ISSUE_TEMPLATE/
         └── new-pattern.md       # Template buat report pola baru
