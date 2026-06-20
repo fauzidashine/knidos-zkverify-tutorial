@@ -25,20 +25,49 @@ import subprocess
 
 # ---- Auto-install deps ----
 def ensure_deps():
+    """Ensure pexpect + requests are available. Try several install strategies."""
     missing = []
     for mod in ('pexpect', 'requests'):
         try:
             __import__(mod)
         except ImportError:
             missing.append(mod)
-    if missing:
-        print(f"Installing: {', '.join(missing)}...")
-        subprocess.run(
-            [sys.executable, '-m', 'pip', 'install', '--quiet'] + missing,
-            check=True
-        )
+    if not missing:
+        return
+
+    print(f"Installing: {', '.join(missing)}...")
+
+    # Try multiple strategies in order of preference
+    strategies = [
+        # 1. Normal pip (works in most environments)
+        [sys.executable, '-m', 'pip', 'install', '--quiet'] + missing,
+        # 2. With --break-system-packages (PEP 668, Python 3.11+)
+        [sys.executable, '-m', 'pip', 'install', '--quiet', '--break-system-packages'] + missing,
+        # 3. User install
+        [sys.executable, '-m', 'pip', 'install', '--quiet', '--user'] + missing,
+        # 4. Fallback: pip3 directly
+        ['pip3', 'install', '--quiet'] + missing,
+    ]
+
+    last_err = None
+    for cmd in strategies:
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            if r.returncode == 0:
+                print(f"  ✓ Installed via: {' '.join(cmd[:4])}...")
+                return
+            last_err = r.stderr or r.stdout
+        except Exception as e:
+            last_err = str(e)
+
+    print(f"✗ Auto-install failed.")
+    print(f"  Run manually: pip3 install -r requirements.txt")
+    print(f"  Last error: {last_err[:200] if last_err else 'unknown'}")
+    sys.exit(1)
 
 ensure_deps()
+
+# Import after ensure_deps() so they're available module-wide
 import pexpect
 import requests
 
@@ -59,27 +88,58 @@ class C:
 
 # ---- Parse record from terminal output ----
 def parse_records(log_text):
-    """Parse all record data from accumulated terminal output."""
-    records = []
-    # Find each record block
-    # Pattern: fillsCommitment[0]: ... fillsCommitment[1]: ... startTime: ... endTime: ... settlement tx: 0x...
-    pattern = re.compile(
-        r'fillsCommitment\[0\]:\s*(\S+).*?'
-        r'fillsCommitment\[1\]:\s*(\S+).*?'
-        r'startTime:\s*(\d+).*?'
-        r'endTime:\s*(\d+).*?'
-        r'(?:[Ss]ettlement\s+tx|Tx)[:\s]+(0x[a-f0-9]{64})',
-        re.DOTALL
-    )
-    for m in pattern.finditer(log_text):
-        records.append({
-            'fill_0': m.group(1),
-            'fill_1': m.group(2),
-            'start_time': m.group(3),
-            'end_time': m.group(4),
-            'tx_hash': m.group(5),
-        })
-    return records
+    """Parse all records from accumulated terminal output.
+
+    Records are separated by blank lines. Each record has:
+      fillsCommitment[0]: 0x...
+      fillsCommitment[1]: 0x...
+      startTime:           <ms timestamp>
+      endTime:             <ms timestamp>
+      Settlement tx:       0x...64 hex chars
+    """
+    out = []
+    current = {}
+    for line in log_text.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+
+        m = re.match(r'fillsCommitment\[0\]:\s*(\S+)', line)
+        if m:
+            # New record starts — save previous if complete
+            if len(current) == 5:
+                out.append(current)
+            current = {'fill_0': m.group(1)}
+            continue
+
+        m = re.match(r'fillsCommitment\[1\]:\s*(\S+)', line)
+        if m:
+            current['fill_1'] = m.group(1)
+            continue
+
+        m = re.match(r'startTime:\s*(\d+)', line)
+        if m:
+            current['start_time'] = m.group(1)
+            continue
+
+        m = re.match(r'endTime:\s*(\d+)', line)
+        if m:
+            current['end_time'] = m.group(1)
+            continue
+
+        m = re.search(r'(?:[Ss]ettlement\s+tx|Tx)[:\s]+(0x[a-f0-9]{64})', line)
+        if m:
+            current['tx_hash'] = m.group(1)
+            if len(current) == 5:
+                out.append(current)
+                current = {}
+            continue
+
+    # Tail record (if file ended without trailing newline)
+    if len(current) == 5:
+        out.append(current)
+
+    return out
 
 # ---- Verify one record via Subscan API ----
 def verify_record(record, retries=3):
