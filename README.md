@@ -16,8 +16,6 @@ Tutorial step-by-step buat selesaikan Knidos **"Verify a ZK Proof Manually"** ch
 | 4/5 correct | 200 pts | ❌ |
 | ≤3/5 correct | < 150 pts | ❌ |
 
-**Bonus**: bisa pake banyak wallet — tiap wallet baru = +250 pts + badge baru. Ga ada cap jumlah wallet.
-
 ---
 
 ## 🛠 Yang Dibutuhin
@@ -297,17 +295,6 @@ Transaksi yang bisa VALID atau INVALID tergantung session:
 - `0x4b5144a8…cb6c` — VALID kalo terminal forward, INVALID kalo backwards
 - `0x42953c8f…7edb` — biasanya VALID
 - `0x64e7611a…9c49` — biasanya VALID
-
----
-
-## ⚙️ Setup Multi-Wallet
-
-Lo bisa pake banyak wallet — tiap wallet = +250 pts. Tiap wallet:
-1. Pake wallet address beda di MetaMask/Rabby
-2. Sign di browser
-3. Selesai challenge → dapet 250 pts + badge
-
-**Strategi:** bikin 3-5 wallet di MetaMask, kerjain semuanya.
 
 ---
 
