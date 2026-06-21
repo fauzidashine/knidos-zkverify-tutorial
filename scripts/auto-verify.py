@@ -304,7 +304,7 @@ def main():
 
     try:
         child = pexpect.spawn(
-            f'docker run --pull=always -it --name knidos_run -p 7878:7878 {DOCKER_IMAGE}',
+            f'docker run --pull=missing -it --name knidos_run -p 7878:7878 {DOCKER_IMAGE}',
             encoding='utf-8',
             timeout=900,
             dimensions=(50, 200),
@@ -324,9 +324,8 @@ def main():
             r'VK[:\s].*0x[a-f0-9]{64}',
             r'Verification\s+key',
             r'Wallet\s+signed',
-            r'Pulling',
             pexpect.TIMEOUT,
-        ], timeout=180)
+        ], timeout=300)
         if idx == 4:
             print(f'{C.Y}⚠ Timeout. Last 30 lines of output:{C.X}')
             with open(log_path) as f:
@@ -360,7 +359,7 @@ def main():
         # Wait for record to appear in log
         print(f'  {C.B}▶ Waiting for record data...{C.X}')
         record = None
-        for attempt in range(30):  # up to 30s
+        for attempt in range(300):  # up to 5 min for first record (docker pull + circuit compile)
             time.sleep(1)
             with open(log_path) as f:
                 log_text = f.read()
