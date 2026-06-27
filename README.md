@@ -2,6 +2,8 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=fauzidashine/knidos-zkverify-tutorial)
 
+> 🌐 **Bahasa:** 🇮🇩 [Bahasa Indonesia](README.md) · 🇬🇧 [English](README.en.md)
+
 Tutorial step-by-step buat selesaikan Knidos **"Verify a ZK Proof Manually"** challenge di testnet dengan score **5/5 perfect + 250 points + ZK Verifier badge**.
 
 🔗 Challenge: https://testnet.knidos.xyz/zkverify-task

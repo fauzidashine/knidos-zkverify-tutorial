@@ -1,5 +1,7 @@
 # Tutorial: Auto-Verify Knidos zkVerify Challenge
 
+> 🌐 **Bahasa:** 🇮🇩 [Bahasa Indonesia](TUTORIAL.md) · 🇬🇧 [English](TUTORIAL.en.md)
+
 Verifikasi 5 record ZK proof di [testnet.knidos.xyz/zkverify-task](https://testnet.knidos.xyz/zkverify-task) secara otomatis pakai **GitHub Codespaces**. Total ~5 menit setup + ~5 menit run. Bisa dapet sampe **250 pts + badge ZK Verifier** per wallet.
 
 ## Yang Lo Butuhin
