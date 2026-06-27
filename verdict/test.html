@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verdict Checker — Test Page</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+  pre { background: #1e1e1e; color: #e8e8e8; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 13px; }
+  .warning { background: #fff8e1; border-left: 4px solid #ffc107; padding: 12px 16px; border-radius: 4px; margin: 16px 0; }
+  h2 { border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+
+  .lang-toggle {
+    position: fixed; top: 14px; right: 16px; z-index: 100;
+    background: rgba(255,255,255,0.9); padding: 4px;
+    border-radius: 24px; display: flex; gap: 2px;
+    border: 1px solid #ddd;
+  }
+  .lang-toggle button {
+    background: transparent; color: #333; border: none;
+    padding: 6px 14px; border-radius: 18px; font-size: 13px;
+    font-weight: 600; cursor: pointer; opacity: 0.55;
+  }
+  .lang-toggle button.active {
+    background: linear-gradient(135deg, #c471f5, #fa71cd);
+    color: #fff; opacity: 1;
+  }
+
+  body.lang-id [data-lang="en"] { display: none !important; }
+  body.lang-en [data-lang="id"] { display: none !important; }
+</style>
+</head>
+<body class="lang-id">
+
+<div class="lang-toggle">
+  <button id="btn-id" onclick="setLang('id')">🇮🇩 ID</button>
+  <button id="btn-en" onclick="setLang('en')">🇬🇧 EN</button>
+</div>
+
+<h1>
+  <span data-lang="id">Verdict Checker — Halaman Test</span>
+  <span data-lang="en">Verdict Checker — Test Page</span>
+</h1>
+
+<div class="warning">
+  <strong>
+    <span data-lang="id">Untuk testing bookmarklet tanpa record Knidos real.</span>
+    <span data-lang="en">For testing the bookmarklet without real Knidos records.</span>
+  </strong>
+  <span data-lang="id">Page ini mensimulasikan Subscan page dengan VK + pubs + events. Drag bookmark</span>
+  <span data-lang="en">This page simulates a Subscan page with VK + pubs + events. Drag the bookmark</span>
+  <strong>Verdict Checker</strong>
+  <span data-lang="id">dari</span>
+  <span data-lang="en">from</span>
+  <a href="index.html">index.html</a>,
+  <span data-lang="id">terus klik di sini untuk ngetes.</span>
+  <span data-lang="en">then click here to test.</span>
+</div>
+
+<h2>
+  <span data-lang="id">Test scenario: VALID record</span>
+  <span data-lang="en">Test scenario: VALID record</span>
+</h2>
+<p>
+  <span data-lang="id">Klik bookmark, paste ini:</span>
+  <span data-lang="en">Click the bookmark, paste this:</span>
+</p>
+<pre>
+fillsCommitment[0]: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+fillsCommitment[1]: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+startTime: 1700000000
+endTime: 1700001000
+</pre>
+
+<div style="margin-top:16px">
+  <strong>
+    <span data-lang="id">Simulasi Subscan page:</span>
+    <span data-lang="en">Simulated Subscan page:</span>
+  </strong>
+  <pre style="margin-top:8px">
+Call: settlement.submit_proof
+vk_or_hash: 0xb3fe911644c664fb0b3b7c72879d7a366e0df1a740888cca034934210630ac5b
+pubs: [0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, 0x6553f100, 0x6553f4e8]
+
+Events:
+- ProofVerified
+- SettlementCreated
+  </pre>
+</div>
+
+<hr style="margin: 40px 0">
+
+<h2>
+  <span data-lang="id">Test scenario: INVALID (VK mismatch)</span>
+  <span data-lang="en">Test scenario: INVALID (VK mismatch)</span>
+</h2>
+<p>
+  <span data-lang="id">Klik bookmark, paste ini:</span>
+  <span data-lang="en">Click the bookmark, paste this:</span>
+</p>
+<pre>
+fillsCommitment[0]: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+fillsCommitment[1]: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+startTime: 1700000000
+endTime: 1700001000
+</pre>
+
+<div style="margin-top:16px">
+  <strong>
+    <span data-lang="id">Simulasi Subscan page (VK salah):</span>
+    <span data-lang="en">Simulated Subscan page (wrong VK):</span>
+  </strong>
+  <pre style="margin-top:8px">
+Call: settlement.submit_proof
+vk_or_hash: 0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+pubs: [0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, 0x6553f100, 0x6553f4e8]
+
+Events:
+- ProofVerified
+  </pre>
+</div>
+
+<script>
+function setLang(lang) {
+  document.body.classList.remove('lang-id', 'lang-en');
+  document.body.classList.add('lang-' + lang);
+  const btnId = document.getElementById('btn-id');
+  const btnEn = document.getElementById('btn-en');
+  if (btnId) btnId.classList.toggle('active', lang === 'id');
+  if (btnEn) btnEn.classList.toggle('active', lang === 'en');
+  try { localStorage.setItem('kv-test-lang', lang); } catch (e) {}
+}
+(function() {
+  let lang;
+  try {
+    lang = localStorage.getItem('kv-test-lang');
+    if (!lang) {
+      lang = (navigator.language || '').toLowerCase().startsWith('id') ? 'id' : 'en';
+    }
+  } catch (e) { lang = 'id'; }
+  setLang(lang);
+})();
+</script>
+
+</body>
+</html>
