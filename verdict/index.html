@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Knidos Verdict Checker — Bookmarklet Installer</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    color: #e4e4e4;
+    padding: 20px;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
+  h1 {
+    font-size: 32px; margin: 0 0 8px;
+    background: linear-gradient(90deg, #c471f5, #fa71cd);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle { color: #999; margin-bottom: 30px; font-size: 15px; }
+  .card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 24px; margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+  }
+  .card h2 { margin: 0 0 12px; font-size: 18px; color: #fa71cd; }
+  .step { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+  .step-num {
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #c471f5, #fa71cd);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; color: #fff;
+  }
+  .step-body { flex: 1; padding-top: 4px; }
+  .step-body strong { color: #fff; }
+  code, pre {
+    background: #0d1117; border: 1px solid #30363d;
+    border-radius: 6px; font-family: 'SF Mono', Consolas, Monaco, monospace;
+    font-size: 13px;
+  }
+  code { padding: 2px 6px; color: #79c0ff; }
+  pre { padding: 14px 16px; overflow-x: auto; line-height: 1.5; color: #c9d1d9; white-space: pre-wrap; word-break: break-all; }
+  .bookmarklet-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #c471f5, #fa71cd);
+    color: #fff !important; text-decoration: none;
+    padding: 14px 28px; border-radius: 8px;
+    font-weight: 700; font-size: 16px;
+    margin: 16px 0; box-shadow: 0 4px 14px rgba(196, 113, 245, 0.4);
+    cursor: grab; user-select: none;
+  }
+  .bookmarklet-btn:active { cursor: grabbing; }
+  .bookmarklet-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196, 113, 245, 0.6); }
+  .alt-method {
+    margin-top: 16px; padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px; border-left: 3px solid #fa71cd;
+  }
+  .alt-method h3 {
+    margin: 0 0 8px; font-size: 14px; color: #fa71cd;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .url-copy { display: flex; gap: 8px; align-items: stretch; }
+  .url-copy input {
+    flex: 1; background: #0d1117; border: 1px solid #30363d;
+    color: #79c0ff; padding: 10px; font-family: monospace;
+    font-size: 11px; border-radius: 6px;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .url-copy button {
+    background: #238636; color: #fff; border: none;
+    padding: 0 16px; border-radius: 6px;
+    cursor: pointer; font-weight: 600; font-size: 13px;
+  }
+  .url-copy button:hover { background: #2ea043; }
+  .url-copy button.copied { background: #1f6feb; }
+  .size-info {
+    display: inline-block; background: rgba(126, 231, 135, 0.15);
+    color: #7ee787; padding: 2px 8px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; margin-left: 8px;
+  }
+  .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
+  .footer a { color: #79c0ff; text-decoration: none; }
+
+  /* Language toggle */
+  .lang-toggle {
+    position: fixed; top: 14px; right: 16px; z-index: 100;
+    background: rgba(0, 0, 0, 0.4); padding: 4px;
+    border-radius: 24px; display: flex; gap: 2px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .lang-toggle button {
+    background: transparent; color: #fff; border: none;
+    padding: 6px 14px; border-radius: 18px; font-size: 13px;
+    font-weight: 600; cursor: pointer; opacity: 0.55;
+    transition: opacity 0.15s, background 0.15s;
+  }
+  .lang-toggle button:hover { opacity: 0.85; }
+  .lang-toggle button.active {
+    background: linear-gradient(135deg, #c471f5, #fa71cd);
+    opacity: 1;
+    box-shadow: 0 2px 8px rgba(196, 113, 245, 0.4);
+  }
+
+  /* Bilingual content: hide the inactive language */
+  body.lang-id [data-lang="en"] { display: none !important; }
+  body.lang-en [data-lang="id"] { display: none !important; }
+</style>
+</head>
+<body class="lang-id">
+
+<div class="lang-toggle">
+  <button id="btn-id" onclick="setLang('id')" title="Bahasa Indonesia">🇮🇩 ID</button>
+  <button id="btn-en" onclick="setLang('en')" title="English">🇬🇧 EN</button>
+</div>
+
+<div class="container">
+  <h1>Knidos Verdict Checker</h1>
+  <p class="subtitle">
+    <span data-lang="id">Bookmarklet untuk cek 5 rule validasi record Knidos zkVerify challenge di Subscan. Akurasi tinggi, zero infrastructure.</span>
+    <span data-lang="en">Bookmarklet to check the 5 validation rules for Knidos zkVerify challenge records on Subscan. High accuracy, zero infrastructure.</span>
+  </p>
+
+  <div class="card">
+    <h2>
+      <span data-lang="id">Cara Install</span>
+      <span data-lang="en">How to Install</span>
+      <span class="size-info">
+        <span data-lang="id">full code, 5.9k chars, tanpa server</span>
+        <span data-lang="en">full code, 5.9k chars, no server</span>
+      </span>
+    </h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>
+          <span data-lang="id">Pastikan bookmarks bar visible</span>
+          <span data-lang="en">Make the bookmarks bar visible</span>
+        </strong><br>
+        <span data-lang="id">Tekan</span><span data-lang="en">Press</span>
+        <code>Ctrl+Shift+B</code>
+        <span data-lang="id">(Windows/Linux) atau</span><span data-lang="en">(Windows/Linux) or</span>
+        <code>Cmd+Shift+B</code>
+        <span data-lang="id">(Mac).</span><span data-lang="en">(Mac).</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>
+          <span data-lang="id">Drag tombol di bawah ke bookmarks bar</span>
+          <span data-lang="en">Drag the button below to the bookmarks bar</span>
+        </strong><br>
+        <span data-lang="id">Klik & tahan tombol ungu, drag ke atas, lepas. Bookmarklet full-code 5.9k chars — well within Chrome/Firefox/Safari limit (65k+).</span>
+        <span data-lang="en">Click & hold the purple button, drag up, release. Full-code 5.9k chars bookmarklet — well within Chrome/Firefox/Safari limit (65k+).</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>
+          <span data-lang="id">Selesai</span>
+          <span data-lang="en">Done</span>
+        </strong>
+        —
+        <span data-lang="id">buka halaman extrinsic di Subscan, klik bookmark, sidebar muncul di kanan.</span>
+        <span data-lang="en">open the extrinsic page on Subscan, click the bookmark, sidebar appears on the right.</span>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin: 24px 0;">
+      <a id="bookmarklet-link" class="bookmarklet-btn" draggable="true">⚡ Verdict Checker</a>
+    </div>
+
+    <div class="alt-method">
+      <h3>
+        <span data-lang="id">Kalo drag gagal (jarang, tapi bisa)</span>
+        <span data-lang="en">If drag fails (rare, but possible)</span>
+      </h3>
+      <p style="margin: 0 0 10px; font-size: 13px; color: #ccc;">
+        <span data-lang="id">Klik kanan tombol di atas →</span>
+        <span data-lang="en">Right-click the button above →</span>
+        <strong>"Bookmark this link..."</strong>
+        <span data-lang="id">(lebih reliable daripada drag).</span>
+        <span data-lang="en">(more reliable than drag).</span>
+      </p>
+      <p style="margin: 12px 0 8px; font-size: 13px; color: #ccc;">
+        <span data-lang="id">Atau copy URL di bawah, terus bookmark manual:</span>
+        <span data-lang="en">Or copy the URL below, then bookmark manually:</span>
+      </p>
+      <div class="url-copy">
+        <input id="bm-url" readonly>
+        <button id="copy-btn">
+          <span data-lang="id">Copy</span>
+          <span data-lang="en">Copy</span>
+        </button>
+      </div>
+      <p style="margin: 12px 0 0; font-size: 12px; color: #888;">
+        <code>Ctrl+D</code>
+        <span data-lang="id">di mana aja → paste URL ini di field URL bookmark.</span>
+        <span data-lang="en">anywhere → paste this URL into the bookmark URL field.</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>
+      <span data-lang="id">Cara Pakai</span>
+      <span data-lang="en">How to Use</span>
+    </h2>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <span data-lang="id">Buka halaman extrinsic di Subscan, contoh:</span>
+        <span data-lang="en">Open the extrinsic page on Subscan, e.g.:</span>
+        <code>https://zkverify.subscan.io/extrinsic/0x...</code>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <span data-lang="id">Klik bookmark</span>
+        <span data-lang="en">Click the bookmark</span>
+        <strong>"Verdict Checker"</strong>
+        <span data-lang="id">di bookmarks bar. Sidebar muncul di kanan.</span>
+        <span data-lang="en">in the bookmarks bar. Sidebar appears on the right.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <span data-lang="id">Ambil</span>
+        <span data-lang="en">Take</span>
+        <code>fillsCommitment[0/1]</code>,
+        <code>startTime</code>,
+        <code>endTime</code>
+        <span data-lang="id">dari challenge task / form input user. Paste ke sidebar.</span>
+        <span data-lang="en">from the challenge task / user input form. Paste into the sidebar.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <span data-lang="id">Klik</span>
+        <span data-lang="en">Click</span>
+        <strong>Check Verdict</strong>.
+        <span data-lang="id">Sidebar nge-cek 8 rule on-chain dan kasih verdict</span>
+        <span data-lang="en">Sidebar checks 8 on-chain rules and gives a verdict of</span>
+        <span style="color:#7ee787">VALID</span> /
+        <span style="color:#ff7b7b">INVALID</span>.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>
+      <span data-lang="id">Cara Test</span>
+      <span data-lang="en">How to Test</span>
+    </h2>
+    <p>
+      <span data-lang="id">Buka</span>
+      <span data-lang="en">Open</span>
+      <a href="/test.html" style="color:#79c0ff">/test.html</a>
+      <span data-lang="id">di tab baru, klik bookmark → sidebar harus muncul dengan form. Itu simulasi Subscan page.</span>
+      <span data-lang="en">in a new tab, click the bookmark → sidebar should appear with the form. That's a simulated Subscan page.</span>
+    </p>
+  </div>
+
+  <div class="footer">
+    <span data-lang="id">Sumber:</span>
+    <span data-lang="en">Source:</span>
+    <a href="https://github.com/fauzidashine/knidos-zkverify-tutorial">github.com/fauzidashine/knidos-zkverify-tutorial</a>
+  </div>
+</div>
+
+<script>
+// Embed minified bookmarklet JS (now bilingual via _t() helper)
+// _t(id, en) auto-detects browser language
+const BOOKMARKLET_CODE = `!function(){if(window.__knidosVerdictLoaded)return document.getElementById("knidos-verdict-sidebar")?.remove(),void(window.__knidosVerdictLoaded=!1);window.__knidosVerdictLoaded=!0;const _L=(navigator.language||"").toLowerCase().startsWith("id")?"id":"en",_t=(a,b)=>_L==="id"?a:b;const e="0xb3fe911644c664fb0b3b7c72879d7a366e0df1a740888cca034934210630ac5b",t="knidos-verdict-sidebar",o="#"+t+"{position:fixed;top:0;right:0;width:400px;height:100vh;background:#fff;color:#1a1a1a;z-index:2147483647;padding:20px;overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,sans-serif;box-shadow:-4px 0 16px rgba(0,0,0,.15);border-left:1px solid #ddd;box-sizing:border-box}#"+t+" h3{margin:0 0 4px;font-size:18px}#"+t+" .sub{color:#888;font-size:12px;margin-bottom:16px}#"+t+" label{display:block;font-size:12px;font-weight:600;color:#555;margin:10px 0 4px}#"+t+" input{width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-family:monospace;font-size:12px;box-sizing:border-box}#"+t+" button{margin-top:14px;width:100%;padding:10px;background:#5b3df5;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:14px}#"+t+" button:hover{background:#4a30d4}#"+t+" button:disabled{background:#aaa;cursor:wait}#"+t+" .result{margin-top:16px;padding:12px;background:#f5f5f5;border-radius:6px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;max-height:50vh;overflow-y:auto}#"+t+" .verdict{display:block;margin-top:12px;padding:14px;border-radius:6px;font-weight:700;font-size:18px;text-align:center}#"+t+" .verdict.valid{background:#d4f4dd;color:#0a6e2a}#"+t+" .verdict.invalid{background:#fde0e0;color:#a01818}#"+t+" .close{position:absolute;top:10px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;padding:0;width:24px;height:24px}#"+t+" .close:hover{color:#333}#"+t+" details{margin-top:10px;font-size:11px;color:#666}#"+t+" details summary{cursor:pointer;color:#5b3df5}",n=document.createElement("div");n.id=t,n.innerHTML="<style>"+o+'</style><button class="close" id="kv-close">×</button><h3>Verdict Checker</h3><div class="sub">Knidos zkVerify Challenge</div><label>fillsCommitment[0]</label><input id="kv-fill0" placeholder="0x..." autocomplete="off"><label>fillsCommitment[1]</label><input id="kv-fill1" placeholder="0x..." autocomplete="off"><label>startTime (decimal)</label><input id="kv-st" placeholder="12345" autocomplete="off"><label>endTime (decimal)</label><input id="kv-et" placeholder="67890" autocomplete="off"><button id="kv-go">Check Verdict</button><div id="kv-result" class="result" style="display:none"></div><details><summary>'+_t("Cara baca hasil","How to read results")+'</summary>'+_t("Setiap rule dicek ✅/❌. VERDICT di bawah = VALID kalau semua ✅, INVALID kalau ada yang ❌. VK harus match 0xb3fe9116...","Each rule is checked ✅/❌. VERDICT below = VALID if all ✅, INVALID if any ❌. VK must match 0xb3fe9116...")+'</details>',document.body.appendChild(n),document.getElementById("kv-close").addEventListener("click",function(){n.remove(),window.__knidosVerdictLoaded=!1}),document.getElementById("kv-go").addEventListener("click",function(){const t=document.getElementById("kv-fill0").value.trim(),o=document.getElementById("kv-fill1").value.trim(),n=document.getElementById("kv-st").value.trim(),i=document.getElementById("kv-et").value.trim();if(!(t&&o&&n&&i))return void alert(_t("Isi semua field dulu","Fill all fields first"));const r=document.getElementById("kv-go");r.disabled=!0,r.textContent="Checking...";try{const r=document.body.innerText||document.body.textContent;let a=[],d="NOT FOUND";const l=r.match(/pubs[^\\[\\]]*\\[([^\\]]+)\\]/i);if(l){const e=l[1];a=Array.from(e.matchAll(/(?:0x[a-fA-F0-9]+|\\d{6,})/g)).map(function(e){return e[0]}).map(function(e){if(e.startsWith("0x")){const t=e.slice(2);return t.length%2==1?"0x0"+t:e}const t=parseInt(e,10);return isNaN(t)?e:"0x"+t.toString(16)})}const s=Array.from(r.matchAll(/0x[a-fA-F0-9]{64}/g)).map(function(e){return e[0]});d=s.find(function(t){return t.toLowerCase()===e.toLowerCase()})||"NOT FOUND";const c=d.toLowerCase()===e.toLowerCase();if(0===a.length){a=Array.from(new Set(s.concat(Array.from(r.matchAll(/0x[a-fA-F0-9]+/g)).map(function(e){return e[0]})))).filter(function(t){return t.toLowerCase()!==e.toLowerCase()&&t.length>=4})}const u=!(!a[0]||!t||a[0].toLowerCase()!==t.toLowerCase()),p=!(!a[1]||!o||a[1].toLowerCase()!==o.toLowerCase()),m=parseInt(n),f=parseInt(i),b=a[2]||"",x=a[3]||"",g=b.startsWith("0x")?b.slice(2):b,h=x.startsWith("0x")?x.slice(2):x,v=g.slice(-8),k=h.slice(-8),y=parseInt(v,16),w=parseInt(k,16),C=parseInt(b),I=parseInt(x),L=y===m||C===m,V=w===f||I===f,E=m<f,z=/submit_proof/i.test(r),A=/ProofVerified/i.test(r),T=r.match(/(ProofVerified|Settlement[A-Za-z]*)/gi)||[],B=[["1. submit_proof call",z],["2. ProofVerified event",A],["3. VK matches app VK",c],["4. fillsCommitment[0] = pubs[0]",u],["5. fillsCommitment[1] = pubs[1]",p],["6. startTime = pubs[2]",L],["7. endTime = pubs[3]",V],["8. startTime < endTime",E]],_=B.every(function(e){return e[1]});let N="";for(const e of B)N+=(e[1]?"✅ ":"❌ ")+e[0]+"\\\\n";c&&(N+="   VK on-chain: "+d+"\\n"),N+="\\nFound pubs[]:\\n",N+="  pubs[0]: "+(a[0]||"(not found)")+"\\n",N+="  pubs[1]: "+(a[1]||"(not found)")+"\\n",N+="  pubs[2]: "+(a[2]||"(not found)")+" → dec="+C+" hex32="+y+"\\n",N+="  pubs[3]: "+(a[3]||"(not found)")+" → dec="+I+" hex32="+w+"\\n",N+="\\\\nFound events: "+JSON.stringify(T)+"\\\\n",N+="\\\\n═══ VERDICT ═══\\\\n";const D=document.getElementById("kv-result");D.style.display="block",D.innerHTML='<pre style="margin:0;font-family:monospace;font-size:12px">'+N+'</pre><div class="verdict '+(_?"valid":"invalid")+'">'+(_?"✅ VALID":"❌ INVALID")+"</div>"}catch(e){document.getElementById("kv-result").style.display="block",document.getElementById("kv-result").textContent="ERROR: "+e.message}finally{r.disabled=!1,r.textContent="Check Verdict"}})}();`;
+
+// Set href at runtime: drag-drop preserves this href
+const bmLink = document.getElementById('bookmarklet-link');
+bmLink.href = 'javascript:' + BOOKMARKLET_CODE;
+
+// Show in input for copy/manual install
+const urlInput = document.getElementById('bm-url');
+urlInput.value = 'javascript:' + BOOKMARKLET_CODE;
+urlInput.addEventListener('click', () => urlInput.select());
+
+// Copy button
+document.getElementById('copy-btn').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(urlInput.value);
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 1500);
+  } catch (e) {
+    urlInput.select();
+    document.execCommand('copy');
+    alert('URL selected. Tekan Ctrl+C / Press Ctrl+C.');
+  }
+});
+
+// Language toggle
+function setLang(lang) {
+  document.body.classList.remove('lang-id', 'lang-en');
+  document.body.classList.add('lang-' + lang);
+  const btnId = document.getElementById('btn-id');
+  const btnEn = document.getElementById('btn-en');
+  if (btnId) btnId.classList.toggle('active', lang === 'id');
+  if (btnEn) btnEn.classList.toggle('active', lang === 'en');
+  try { localStorage.setItem('kv-lang', lang); } catch (e) {}
+}
+(function() {
+  let lang;
+  try {
+    lang = localStorage.getItem('kv-lang');
+    if (!lang) {
+      lang = (navigator.language || '').toLowerCase().startsWith('id') ? 'id' : 'en';
+    }
+  } catch (e) { lang = 'id'; }
+  setLang(lang);
+})();
+</script>
+</body>
+</html>
